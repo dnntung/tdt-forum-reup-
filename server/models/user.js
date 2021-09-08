@@ -4,13 +4,22 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var UserSchema = new Schema({
-  userId: String,
+  // Thông tin xác thực tổng quát của sinh viên cũng như
+  // phòng/khoa và admin
+  userId: {
+    type: String, 
+    unique: true
+  },
   googleId: String,
+  password: String,
+  roleId: Number,
+
+  // Thông tin sinh viên
+  studentId: String,
   displayName: String,
   class: String,
   major: String,
   picture: String,
-  role: Object
 });
 
 module.exports = mongoose.model('User', UserSchema);

@@ -4,6 +4,7 @@ const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt')
 var passport = require('passport');
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+const {generateAccessToken, generateRefreshToken} = require('../utils.js')
 
 // Use the GoogleStrategy within Passport.
 // Strategies in Passport require a `verify` function, which accept
@@ -27,23 +28,23 @@ passport.use(new GoogleStrategy({
 
  			if (user) {return done(null, user)}
 
+ 			const studentEmail = /([a-zA-Z0-9]+)@student.tdtu.edu.vn$/.exec(email)
+
+			if (!studentEmail) {
+	 			return done(null, false, {message: 'Vui lòng sử dụng email sinh viên!'})
+	 		}
+
+	 		const studentId = studentEmail[1]
  			const newUser = new User({
  				googleId: profile.id,
+ 				studentId,
  				displayName: profile.displayName,
  				picture: picture,
- 				role: {
- 					type: 2,
- 					name: 'Sinh viên'
- 				}
+ 				roleId: 2
  			})
 
  			return done(null, await newUser.save())
  		}
-
- 		if (!email.includes('@student.tdtu.edu.vn')) {
- 			return done(null, false, {message: 'Vui lòng sử dụng email sinh viên!'})
- 		}
-
  		getUser().catch((err) => done(err))
   	}
 ));
@@ -88,22 +89,34 @@ Router.get('/google/callback', (req, res, next) => {
 	passport.authenticate('google', function(err, user, info) {
 	    if (err) {
 	    	console.log(err)
-	    	return res.json({
+	    	return res.status(500).json({
 	    		ok: false,
 	    		msg: 'Đã có lỗi xảy ra!'
 	    	})
 	    }
 	    if (!user) {
-	    	return res.json({
+	    	return res.status(404).json({
 	    		ok: false,
 	    		msg: info.message
 	    	})
 	    }
-	    return res.json({
-	      	ok: true, 
-	      	msg: 'Đăng nhập thành công',
-	      	user
-      	})
+
+	    const {studentId, picture, displayName} = user
+	    const accessToken =  generateAccessToken(user)
+		const refreshToken = generateAccessToken(user)
+
+	    return res
+	    	.cookie('refreshToken', refreshToken, {httpOnly: true})
+		    .json({
+		      	ok: true, 
+		      	msg: 'Đăng nhập thành công!',
+		      	data: {
+		      		studentId,
+		      		picture,
+		      		displayName,
+		      		accessToken
+		      	}		      	
+	      	})
   	})(req, res, next);
 });
 
