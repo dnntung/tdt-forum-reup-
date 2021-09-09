@@ -4,7 +4,13 @@ const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt')
 var passport = require('passport');
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
-const {generateAccessToken, generateRefreshToken} = require('../utils.js')
+const {verifyRefreshToken, generateAccessToken, generateRefreshToken} = require('../utils.js')
+
+const cookieOptions = {
+	httpOnly: true,
+	path: '/auth/token',
+	maxAge: 7 * 24 * 60 * 60 * 1000 // days * hours * minutes * seconds * ms
+}
 
 // Use the GoogleStrategy within Passport.
 // Strategies in Passport require a `verify` function, which accept
@@ -103,10 +109,10 @@ Router.get('/google/callback', (req, res, next) => {
 
 	    const {studentId, picture, displayName} = user
 	    const accessToken =  generateAccessToken(user)
-		const refreshToken = generateAccessToken(user)
+		const refreshToken = generateRefreshToken(user)
 
 	    return res
-	    	.cookie('refreshToken', refreshToken, {httpOnly: true})
+	    	.cookie('refreshToken', refreshToken, cookieOptions)
 		    .json({
 		      	ok: true, 
 		      	msg: 'Đăng nhập thành công!',
@@ -142,5 +148,44 @@ Router.get('/google/callback', (req, res, next) => {
 //       	})
 //   	})(req, res, next);
 // })
+
+// Kiểm tra refresh token và cấp access token mới
+Router.get('/token', (req,res) => {
+	const validateToken = async () => {
+		const {refreshToken} = req.cookies
+		const result = verifyRefreshToken(refreshToken)
+		const user = await User.findById(result._id)
+
+		return user
+	}
+
+	validateToken()
+		.then((user) => {
+			if (user) {
+				const newAccessToken =  generateAccessToken(user)
+				const newRefreshToken = generateRefreshToken(user)
+
+				return res
+					.cookie('refreshToken', newRefreshToken, cookieOptions)
+					.json({
+						ok: true,
+						msg: 'Cập nhật Token thành công!',
+						data: {accessToken: newAccessToken}
+					})
+			}
+
+			return res.status(401).json({
+					ok: false, 
+					msg: 'Xác thực thất bại! Vui lòng đăng nhập lại!'
+				})
+		})
+		.catch((err) => {
+	    	console.log(err)
+			res.status(500).json({
+					ok: false,
+					msg: 'Đã có lỗi xảy ra!'
+				})
+		})
+})
 
 module.exports = Router

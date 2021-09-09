@@ -6,7 +6,7 @@
 - [ ] Đăng nhập bằng tài khoản phòng/khoa_admin 
 - [ ] Xác thực tokens sử dụng jwt (
 	- [x] Xác thực access token
-	- [ ] Cung cấp access token sử dụng refresh token
+	- [x] Cung cấp access token sử dụng refresh token
 )
 
 ## Quản lí nội dung

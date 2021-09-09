@@ -8,7 +8,6 @@ module.exports = (req,res,next) => {
 
 		if (authorization) {
 			const accessToken = authorization.split(' ')[1]
-
 			const result = verifyAccessToken(accessToken)
 			const user = await User.findById(result._id)
 
