@@ -8,6 +8,7 @@ const {verifyRefreshToken, generateAccessToken, generateRefreshToken} = require(
 
 const cookieOptions = {
 	httpOnly: true,
+	overwrite: true,
 	path: '/auth/token',
 	maxAge: 7 * 24 * 60 * 60 * 1000 // days * hours * minutes * seconds * ms
 }
@@ -153,14 +154,40 @@ Router.get('/google/callback', (req, res, next) => {
 Router.get('/token', (req,res) => {
 	const validateToken = async () => {
 		const {refreshToken} = req.cookies
-		const result = verifyRefreshToken(refreshToken)
-		const user = await User.findById(result._id)
 
-		return user
+		if (refreshToken) {
+			let userData
+			
+			try {
+				const {data} = verifyRefreshToken(refreshToken)
+				userData = data
+			}
+			catch (err) {
+				// Trả về null khi jwt báo lỗi expired,
+				// nếu không thì quăng lỗi như bth
+				if (err.name === 'TokenExpiredError') {
+					userData = null
+				}
+				else {
+					console.log(err)
+					throw err
+				}
+			}
+			
+			if (userData) {
+				const user = await User.findById(userData._id)
+
+				return user
+			}
+		}
+
+		return null
 	}
 
 	validateToken()
 		.then((user) => {
+			// Nếu user != null thì cấp access token mới,
+			// ngược lại báo lỗi xác thực
 			if (user) {
 				const newAccessToken =  generateAccessToken(user)
 				const newRefreshToken = generateRefreshToken(user)

@@ -8,12 +8,32 @@ module.exports = (req,res,next) => {
 
 		if (authorization) {
 			const accessToken = authorization.split(' ')[1]
-			const result = verifyAccessToken(accessToken)
-			const user = await User.findById(result._id)
+			let userData
+			
+			try {
+				const {data} = verifyAccessToken(accessToken)
 
-			if (user) {
-				req.body.user = user
-				return next()
+				userData = data
+			}
+			catch (err) {
+				// Xác thực thất bại khi jwt báo lỗi expired,
+				// nếu không thì quăng lỗi như bth
+				if (err.name === 'TokenExpiredError') {
+					userData = null
+				}
+				else {
+					console.log(err)
+					throw err
+				}
+			}
+			
+			if (userData) {
+				const user = await User.findById(userData._id)
+
+				if (user) {
+					req.body.user = user
+					return next()
+				}
 			}
 		}
 		

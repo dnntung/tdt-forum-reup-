@@ -4,7 +4,7 @@
 
 - [x] Đăng nhập bằng email sinh viên (sử dụng Google Authentication) 
 - [ ] Đăng nhập bằng tài khoản phòng/khoa_admin 
-- [ ] Xác thực tokens sử dụng jwt (
+- [x] Xác thực tokens sử dụng jwt (
 	- [x] Xác thực access token
 	- [x] Cung cấp access token sử dụng refresh token
 )
@@ -12,10 +12,12 @@
 ## Quản lí nội dung
 > Sử dụng ajax hoặc tương tự
 
-- [ ] Xem bài viết
+- [x] Xem bài viết (
+	[ ] Xem tối đa 10 bài viết mỗi lần load
+)
 - [ ] Đăng bài viết (
 	- [ ] Đính kèm hình ảnh
-	- [ ] Đính kèm video (youtube)
+	- [x] Đính kèm video url (youtube)
 )
 - [ ] Sửa bài viết
 - [ ] Xóa bài viết
@@ -33,3 +35,9 @@
 [How Http Cookies work](https://stackoverflow.com/questions/6922145/what-is-the-difference-between-server-side-cookie-and-client-side-cookie)
 
 [Practice auth-ing with tokens](https://anonystick.com/blog-developer/json-web-token-jwt-thuc-hanh-su-dung-refresh-token-khi-token-het-han-voi-nodejs-va-express-js-2020071649665528)
+
+[Youtube URL validator](https://stackoverflow.com/questions/2964678/jquery-youtube-url-validation-with-regex)
+
+[Express validator's document](https://express-validator.github.io/docs/index.html)
+
+[Setup timestamps for mongoose's models](https://masteringjs.io/tutorials/mongoose/timestamps)
