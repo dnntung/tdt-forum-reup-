@@ -160,6 +160,8 @@ Router.get('/token', (req,res) => {
 			
 			try {
 				const {data} = verifyRefreshToken(refreshToken)
+				
+				// console.log(data)
 				userData = data
 			}
 			catch (err) {

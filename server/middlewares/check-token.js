@@ -6,6 +6,14 @@ module.exports = (req,res,next) => {
 	const validateToken = async () => {
 		const {authorization} = req.headers
 
+		// Dev section only
+		if (process.env.NODE_ENV==='development') {
+			req.body.user = {
+				_id: '613c6cc7844318735e8b4a9b'
+			}
+			return next()
+		}
+
 		if (authorization) {
 			const accessToken = authorization.split(' ')[1]
 			let userData

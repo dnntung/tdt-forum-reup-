@@ -20,10 +20,14 @@ Router.get('/', (req,res) => {
 			ok: true, 
 			data: {posts}
 		}))
-		.catch((err) => res.json({
-			ok: false, 
-			msg: 'Đã có lỗi xảy ra!'
-		}))
+		.catch((err) => {
+			console.log(err)
+
+			return res.json({
+				ok: false, 
+				msg: 'Đã có lỗi xảy ra!'
+			})
+		})
 })
 
 // POST /post
@@ -67,37 +71,92 @@ Router.post('/', postValidator.createPost(), (req,res) => {
 
 // PUT /post/:postId
 // Chỉnh sửa bài viết
-// 	Router.put('/:postId', (req,res) => {
-// 	const {postId} = req.params
-// 	const updatePost = async () => {}
-// 
-// 	updatePost()
-// 		.then(() => res.json({
-// 			ok: true, 
-// 			msg: 'Chỉnh sửa bài viết thành công!'
-// 		}))
-// 		.catch((err) => res.json({
-// 			ok: false, 
-// 			msg: 'Đã có lỗi xảy ra!'
-// 		}))
-// })
-// 
+Router.put('/:postId', postValidator.updatePost(), (req,res) => {
+	const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+		return res.status(400).json({
+			ok: false,
+			msg: errors.array()[0].msg
+		})
+    }
+
+	const {postId} = req.params
+	const {user, content, videoURL} = req.body
+	const updatePost = async () => {
+		// Người dùng chỉ có thể chỉnh sửa bài viết của chính họ
+		const post = await Post.findOne({
+			_id: postId,
+			posterId: user._id
+		})
+
+		if (post) {
+			post.content = content
+			post.videoURL = videoURL ? videoURL : post.videoURL
+
+			return await post.save()
+		}
+
+		return null
+	}
+
+	updatePost()
+		.then((post) => {
+			if (!post) {
+				return res.status(404).json({
+					ok: false, 
+					msg: 'Không tìm thấy bài viết!'
+				})
+			}
+
+			return res.json({
+				ok: true, 
+				msg: 'Chỉnh sửa bài viết thành công!',
+				data: {post}
+			})
+		})
+		.catch((err) => res.json({
+			ok: false, 
+			msg: 'Đã có lỗi xảy ra!'
+		}))
+})
+
 
 // DELETE /post/:postId
 // Xóa bài viết
-// Router.delete('/:postId', (req,res) => {
-// 	const {postId} = req.params
-// 	const deletePost = async () => {}
-// 
-// 	deletePost()
-// 		.then(() => res.json({
-// 			ok: true, 
-// 			msg: 'Xóa bài viết thành công!'
-// 		}))
-// 		.catch((err) => res.json({
-// 			ok: false, 
-// 			msg: 'Đã có lỗi xảy ra!'
-// 		}))
-// })
+Router.delete('/:postId', (req,res) => {
+	const {postId} = req.params
+	const {user} = req.body
+	const deletePost = async () => {
+		// Người dùng chỉ có thể xóa bài viết của chính họ
+		return await Post.deleteOne({
+			_id: postId,
+			posterId: user._id
+		}) 
+	}
+
+	deletePost()
+		.then(({deletedCount}) => {
+			// Nếu bài viết xóa thành công -> deletedCount = 1
+			if (deletedCount != 1) {
+				return res.status(404).json({
+					ok: false, 
+					msg: 'Không tìm thấy bài viết!'
+				})
+			}
+
+			return res.json({
+					ok: false, 
+					msg: 'Xóa bài viết thành công!'
+				})
+		})
+		.catch((err) => {
+			console.log(err)
+			return res.json({
+				ok: false, 
+				msg: 'Đã có lỗi xảy ra!'
+			})
+		})
+})
 
 module.exports = Router
