@@ -15,12 +15,12 @@
 - [x] Xem bài viết (
 	[ ] Xem tối đa 10 bài viết mỗi lần load
 )
-- [ ] Đăng bài viết (
+- [x] Đăng bài viết (
 	- [ ] Đính kèm hình ảnh
 	- [x] Đính kèm video url (youtube)
 )
-- [ ] Sửa bài viết
-- [ ] Xóa bài viết
+- [x] Sửa bài viết
+- [x] Xóa bài viết
 
 # REFs
 
@@ -41,3 +41,5 @@
 [Express validator's document](https://express-validator.github.io/docs/index.html)
 
 [Setup timestamps for mongoose's models](https://masteringjs.io/tutorials/mongoose/timestamps)
+
+[Environment for development and production](https://stackoverflow.com/questions/55406055/toggle-between-multiple-env-files-like-env-development-with-node-js)
