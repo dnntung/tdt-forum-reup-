@@ -1,4 +1,4 @@
-const {generateAccessToken, verifyAccessToken} = require('../utils.js')
+const {verifyAccessToken} = require('../utils.js')
 const User = require('../models/user')
 const mongoose = require('mongoose')
 
@@ -39,7 +39,7 @@ module.exports = (req,res,next) => {
 				const user = await User.findById(userData._id)
 
 				if (user) {
-					req.body.user = user
+					req.body.userId = user._id
 					return next()
 				}
 			}

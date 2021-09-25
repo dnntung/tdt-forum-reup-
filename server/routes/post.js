@@ -8,11 +8,15 @@ const postValidator = require('../validators/post')
 
 Router.use(checkToken)
 
-// GET /post
-// Xem danh sách bài viết
+/**
+ * GET /post - All posts 
+ * 
+ * @query userId - lấy tất cả post được đăng bởi user có id này
+ */
 Router.get('/', (req,res) => {
+	const {userId} = req.query
 	const getPosts = async () => { 
-		return await Post.find({})
+		return userId ? await Post.find({userId}) : await Post.find({})
 	}
 	
 	getPosts()
@@ -30,8 +34,14 @@ Router.get('/', (req,res) => {
 		})
 })
 
-// POST /post
-// Tạo bài viết mới
+/**
+ * POST /post - Create a post
+ * 
+ * @body userId - id của user đăng post
+ * @body content - nội dung post
+ * @body videoUrl (optional) - đường dẫn youtube video
+ * @file image - ảnh đính kèm
+ */
 Router.post('/', postValidator.createPost(), (req,res) => {
 	const errors = validationResult(req);
 
@@ -42,10 +52,10 @@ Router.post('/', postValidator.createPost(), (req,res) => {
 		})
     }
 
-	const {content, videoURL, user} = req.body
+	const {content, videoURL, userId} = req.body
 	const createPost = async () => {
 		const post = new Post({
-				posterId: user._id,
+				userId,
 				content,
 				videoURL
 			})
@@ -68,9 +78,13 @@ Router.post('/', postValidator.createPost(), (req,res) => {
 		})
 })
 
-
-// PUT /post/:postId
-// Chỉnh sửa bài viết
+/**
+ * PUT /post/:postId - Update a post
+ * Người dùng chỉ có thể chỉnh sửa post của họ
+ * 
+ * @param postId - id post cần chỉnh sửa
+ * @body content - nội dung post
+ */
 Router.put('/:postId', postValidator.updatePost(), (req,res) => {
 	const errors = validationResult(req);
 
@@ -82,17 +96,15 @@ Router.put('/:postId', postValidator.updatePost(), (req,res) => {
     }
 
 	const {postId} = req.params
-	const {user, content, videoURL} = req.body
+	const {userId, content, videoURL} = req.body
 	const updatePost = async () => {
-		// Người dùng chỉ có thể chỉnh sửa bài viết của chính họ
 		const post = await Post.findOne({
 			_id: postId,
-			posterId: user._id
+			userId
 		})
 
 		if (post) {
 			post.content = content
-			post.videoURL = videoURL ? videoURL : post.videoURL
 
 			return await post.save()
 		}
@@ -122,13 +134,25 @@ Router.put('/:postId', postValidator.updatePost(), (req,res) => {
 })
 
 
-// DELETE /post/:postId
-// Xóa bài viết
-Router.delete('/:postId', (req,res) => {
+/**
+ * DELETE /post/:postId - Delete a post
+ * Người dùng chỉ có thể xóa post của họ
+ * 
+ * @param postId - id post cần chỉnh sửa
+ */
+Router.delete('/:postId', postValidator.deletePost(), (req,res) => {
+	const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+		return res.status(400).json({
+			ok: false,
+			msg: errors.array()[0].msg
+		})
+    }
+	
 	const {postId} = req.params
 	const {user} = req.body
 	const deletePost = async () => {
-		// Người dùng chỉ có thể xóa bài viết của chính họ
 		return await Post.deleteOne({
 			_id: postId,
 			posterId: user._id
